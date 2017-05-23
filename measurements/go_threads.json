@@ -1,0 +1,5 @@
+{
+    "measurement": {"type" : "string", "value" : "go_threads" },
+    "metric_prefix": {"type" : "string", "value" : "go_threads" },
+    "drop_field_name":{"type":"bool","value":false}
+}

@@ -1,0 +1,5 @@
+{
+    "measurement": {"type" : "string", "value" : "node_context_switches" },
+    "metric_prefix": {"type" : "string", "value" : "node_context_switches" },
+    "drop_field_name":{"type":"bool","value":false}
+}

@@ -1,0 +1,35 @@
+// node_exporter.tmpl.tick normalizes the scraped data from the node_exporter
+
+// db is the destination db for the normalized data
+var db = 'prometheus'
+
+// rp is the destination rp for the normalized data
+var rp = 'autogen'
+
+var measurement string
+
+var metric_prefix = measurement + '_'
+
+var exclude = ['__name__']
+
+var flatten_on = exclude
+
+var drop_field_name = TRUE
+
+// Normalize metric into measurement
+stream
+    |from()
+        .where(lambda: strHasPrefix("__name__", metric_prefix))
+    |eval(lambda: strTrimPrefix("__name__", metric_prefix))
+        .as('__name__')
+        .tags('__name__')
+        .keep('value')
+    |groupBy(*)
+        .exclude(exclude)
+    |flatten()
+        .on(flatten_on)
+        .dropOriginalFieldName(drop_field_name)
+    |kapacitorLoopback()
+        .database(db)
+        .retentionPolicy(rp)
+        .measurement(measurement)

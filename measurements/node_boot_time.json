@@ -1,0 +1,5 @@
+{
+    "measurement": {"type" : "string", "value" : "node_boot_time" },
+    "metric_prefix": {"type" : "string", "value" : "node_boot_time" },
+    "drop_field_name":{"type":"bool","value":false}
+}

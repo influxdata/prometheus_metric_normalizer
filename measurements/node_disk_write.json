@@ -1,0 +1,3 @@
+{
+    "measurement": {"type" : "string", "value" : "node_disk_write" }
+}

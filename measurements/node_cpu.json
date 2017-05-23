@@ -1,0 +1,6 @@
+{
+    "measurement": {"type" : "string", "value" : "node_cpu" },
+    "metric_prefix": {"type" : "string", "value" : "node_cpu" },
+    "exclude": {"type": "list", "value": [{"type":"string", "value":"mode"},{"type":"string", "value":"__name__"}]},
+    "flatten_on": {"type": "list", "value": [{"type":"string", "value":"mode"}]}
+}
