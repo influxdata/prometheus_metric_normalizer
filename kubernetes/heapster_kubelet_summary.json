@@ -1,0 +1,3 @@
+{
+  "measurement": {"type" : "string", "value" : "heapster_kubelet_summary" }
+}

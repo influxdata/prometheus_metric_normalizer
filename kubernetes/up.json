@@ -1,3 +1,6 @@
 {
-  "measurement": {"type" : "string", "value" : "up" }
+  "measurement": {"type" : "string", "value" : "up" },
+  "metric_prefix": {"type" : "string", "value" : "up" },
+  "drop_field_name":{"type":"bool","value":false}
 }
+

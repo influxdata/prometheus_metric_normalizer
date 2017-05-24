@@ -1,0 +1,6 @@
+{
+  "measurement": {"type" : "string", "value" : "kube_limitrange" },
+  "metric_prefix": {"type" : "string", "value" : "kube_limitrange" },
+  "drop_field_name":{"type":"bool","value":false}
+}
+

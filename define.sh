@@ -14,9 +14,9 @@ for f in $source/*.json
 do
     name=$(basename $f)
     name=${name/.json/}
-    kapacitor define normalize-$name \
+    kapacitor define normalize-$source-$name \
         -template normalize-prometheus \
         -dbrp prometheus_raw.autogen \
         -vars $f
-    kapacitor enable normalize-$name
+    kapacitor enable normalize-$source-$name
 done
