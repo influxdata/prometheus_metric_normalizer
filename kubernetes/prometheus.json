@@ -1,0 +1,6 @@
+{
+  "measurement": {"type" : "string", "value" : "prometheus" },
+  "metric_prefix": {"type" : "string", "value" : "prometheus" },
+  "drop_field_name":{"type":"bool","value":false}
+}
+

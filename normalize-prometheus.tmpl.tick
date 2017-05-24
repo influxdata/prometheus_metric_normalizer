@@ -1,4 +1,4 @@
-// node_exporter.tmpl.tick normalizes the scraped data from the node_exporter
+// normalize-prometheus.tmpl.tick is a template for normalizing scraped prometheus data
 
 // db is the destination db for the normalized data
 var db = 'prometheus'

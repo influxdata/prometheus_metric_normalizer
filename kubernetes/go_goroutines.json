@@ -1,0 +1,6 @@
+{
+  "measurement": {"type" : "string", "value" : "go_goroutines" },
+  "metric_prefix": {"type" : "string", "value" : "go_goroutines" },
+  "drop_field_name":{"type":"bool","value":false}
+}
+

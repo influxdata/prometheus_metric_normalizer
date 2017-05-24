@@ -1,0 +1,5 @@
+{
+  "measurement": {"type" : "string", "value" : "kubernetes_build_info" },
+  "metric_prefix": {"type" : "string", "value" : "kubernetes_build_info" },
+  "drop_field_name":{"type":"bool","value":false}
+}
