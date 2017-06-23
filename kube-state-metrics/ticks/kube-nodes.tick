@@ -2,6 +2,10 @@
 var db = 'prometheus'
 var rp = 'autogen'
 
+var true_value = 1
+var false_value = 0
+var unknown_value = -1
+
 var prefix = 'kube_node'
 var measurement = prefix + '_'
 var destination = prefix + 's'
@@ -21,27 +25,27 @@ stream
     @groupConsolidateTrueFalseUnknown()
         .measurement('kube_node_status_disk_pressure')
         .tag('condition')
-        .trueValue(1)
-        .falseValue(0)
-        .unknownValue(-1)
+        .trueValue(true_value)
+        .falseValue(false_value)
+        .unknownValue(unknown_value)
     @groupConsolidateTrueFalseUnknown()
         .measurement('kube_node_status_memory_pressure')
         .tag('condition')
-        .trueValue(1)
-        .falseValue(0)
-        .unknownValue(-1)
+        .trueValue(true_value)
+        .falseValue(false_value)
+        .unknownValue(unknown_value)
     @groupConsolidateTrueFalseUnknown()
         .measurement('kube_node_status_out_of_disk')
         .tag('condition')
-        .trueValue(1)
-        .falseValue(0)
-        .unknownValue(-1)
+        .trueValue(true_value)
+        .falseValue(false_value)
+        .unknownValue(unknown_value)
     @groupConsolidateTrueFalseUnknown()
         .measurement('kube_node_status_ready')
         .tag('condition')
-        .trueValue(1)
-        .falseValue(0)
-        .unknownValue(-1)
+        .trueValue(true_value)
+        .falseValue(false_value)
+        .unknownValue(unknown_value)
     @groupJoinToSinglePoint()
         .stripPrefix(measurement)
         .dropTag('__name__')
