@@ -12,18 +12,11 @@ var destination = prefix + 's'
 
 var not_measurement = 'kube_pod_container_'
 
-// This should be equal to / shorter than the scraper period (eg 10s), to avoid including a window with multiple time occurrences of the same point.
-// (I've seen occasional errors when attempt "equal to", so we're using "shorter than" for now.)
-var cycle_time = 5s
-
 // Normalize metric into measurement
 stream
     |from()
-    |where(lambda: strHasPrefix("__name__", measurement) AND !strHasPrefix("__name__", not_measurement))
-    |window()
-        .period(cycle_time)
-        .every(cycle_time)
-    |groupBy('namespace', 'pod')
+        .where(lambda: strHasPrefix("__name__", measurement) AND !strHasPrefix("__name__", not_measurement))
+        .groupBy('namespace', 'pod')
     @groupConsolidateTrueFalseUnknown()
         .measurement('kube_pod_status_ready')
         .tag('condition')

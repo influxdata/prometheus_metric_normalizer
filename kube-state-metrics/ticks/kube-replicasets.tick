@@ -6,18 +6,11 @@ var prefix = 'kube_replicaset'
 var measurement = prefix + '_'
 var destination = prefix + 's'
 
-// This should be equal to / shorter than the scraper period (eg 10s), to avoid including a window with multiple time occurrences of the same point.
-// (I've seen occasional errors when attempt "equal to", so we're using "shorter than" for now.)
-var cycle_time = 5s
-
 // Normalize metric into measurement
 stream
     |from()
-    |where(lambda: strHasPrefix("__name__", measurement))
-    |window()
-        .period(cycle_time)
-        .every(cycle_time)
-    |groupBy('namespace', 'replicaset')
+        .where(lambda: strHasPrefix("__name__", measurement))
+        .groupBy('namespace', 'replicaset')
     @groupJoinToSinglePoint()
         .stripPrefix(measurement)
         .dropTag('__name__')

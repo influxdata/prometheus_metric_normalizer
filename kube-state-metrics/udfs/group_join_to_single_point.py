@@ -6,58 +6,60 @@ import logging
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(levelname)s:%(name)s: %(message)s')
 logger = logging.getLogger()
 
+
+class GroupBuffer(object):
+
+    def __init__(self):
+        self._points = []
+
+    def append(self, point):
+        self._points.append(point)
+
+    def process(self, strip_prefix, drop_tags, ignore_values_from):
+        self._fields = {}
+        self._tags = {}
+
+        for entry in self._points:
+            entry_name = entry.tags['__name__']
+
+            if entry_name not in ignore_values_from:
+                if strip_prefix and entry_name.startswith(strip_prefix):
+                    entry_name = entry_name[len(strip_prefix):]
+
+                self._fields[entry_name] = entry.fieldsDouble['value']
+
+            for tag,value in entry.tags.items():
+                if tag not in drop_tags:
+                    self._tags[tag] = value
+
+        if not self._fields:
+            # There has to be at least one field in order for influxdb to accept the series.
+            self._fields = { 'unused_field': 1 }
+
+
 class KubeStateMetricsJoinToSinglePoint(Handler):
 
     class state(object):
         def __init__(self):
-            self._entries = []
-
-        def reset(self):
-            self._entries = []
+            self.time = None
+            self.group_buffers = {}
 
         def update(self, point):
             #print >> sys.stderr, ("POINT: %r" % point)
-            self._entries.append(point)
+            if not self.time:
+                self.time = point.time
+            group_buffer = self.group_buffers.get(point.group, GroupBuffer())
+            group_buffer.append(point)
+            self.group_buffers[point.group] = group_buffer
 
-        def process(self, strip_prefix, drop_tags, ignore_values_from):
-            all_data = {}
+        def process(self, *args, **kwargs):
+            for group_buffer in self.group_buffers.values():
+                group_buffer.process(*args, **kwargs)
 
-            for entry in self._entries:
-                data = all_data.get(entry.time, {})
+        def reset(self):
+            self.time = None
+            self.group_buffers.clear()
 
-                entry_name = entry.tags['__name__']
-
-                if entry_name not in ignore_values_from:
-                    fields = data.get('fields', {})
-
-                    if strip_prefix and entry_name.startswith(strip_prefix):
-                        entry_name = entry_name[len(strip_prefix):]
-
-                    fields[entry_name] = entry.fieldsDouble['value']
-                    data['fields'] = fields
-
-                tags = data.get('tags', {})
-                for tag,value in entry.tags.items():
-                    if tag not in drop_tags:
-                        tags[tag] = value
-                data['tags'] = tags
-
-                all_data[entry.time] = data
-
-            if not all_data:
-                logger.error("No data available to join.")
-            elif len(all_data) > 1:
-                logger.error("Multiple times present in dataset: %r" % all_data)
-
-            time = all_data.keys()[0]
-
-            self._time = time
-            self._tags = all_data[time].get('tags', {})
-            self._fields = all_data[time].get('fields', {})
-
-            if not self._fields:
-                # There has to be at least one field in order for influxdb to accept the series.
-                self._fields = { 'unused_field': 1 }
 
     def __init__(self, agent):
         self._agent = agent
@@ -71,7 +73,7 @@ class KubeStateMetricsJoinToSinglePoint(Handler):
 
     def info(self):
         response = udf_pb2.Response()
-        response.info.wants = udf_pb2.BATCH
+        response.info.wants = udf_pb2.STREAM
         response.info.provides = udf_pb2.STREAM
         response.info.options['stripPrefix'].valueTypes.append(udf_pb2.STRING)
         response.info.options['dropTag'].valueTypes.append(udf_pb2.STRING)
@@ -108,25 +110,36 @@ class KubeStateMetricsJoinToSinglePoint(Handler):
         return response
 
     def begin_batch(self, begin_req):
-        self._state.reset()
+        raise Exception("not supported")
 
     def end_batch(self, end_req):
+        raise Exception("not supported")
+
+    def flush(self):
         self._state.process(self._strip_prefix, self._drop_tags, self._ignore_values_from)
 
-        response = udf_pb2.Response()
-        response.point.group = end_req.group
+        for group_id, group_buffer in self._state.group_buffers.items():
+            response = udf_pb2.Response()
+            response.point.group = group_id
+            response.point.time = self._state.time
 
-        response.point.time = self._state._time
+            for tag,value in group_buffer._tags.items():
+                response.point.tags[tag] = value
 
-        for tag,value in self._state._tags.items():
-            response.point.tags[tag] = value
+            for field,value in group_buffer._fields.items():
+                response.point.fieldsDouble[field] = value
 
-        for field,value in self._state._fields.items():
-            response.point.fieldsDouble[field] = value
+            self._agent.write_response(response)
 
-        self._agent.write_response(response)
+        self._state.reset()
 
     def point(self, point):
+        # Points come through in bursts, all from a particular scrape share the same time.
+        # So once the time changes, we can flush the current cache.
+        if self._state.time and self._state.time != point.time:
+            self.flush()
+
+        # Add point to cache.
         self._state.update(point)
 
 
