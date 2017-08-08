@@ -1,0 +1,23 @@
+// destination for the normalized data
+var db = 'prometheus'
+var rp = 'autogen'
+
+var prefix = 'kube_service'
+var measurement = prefix + '_'
+var destination = prefix + 's'
+
+// Normalize metric into measurement
+stream
+    |from()
+        .where(lambda: strHasPrefix("__name__", measurement))
+        .groupBy('namespace', 'service')
+    @groupJoinToSinglePoint()
+        .stripPrefix(measurement)
+        .dropTag('__name__')
+        .ignoreValueFrom('kube_service_labels')
+        .ignoreValueFrom('kube_service_info')
+    |kapacitorLoopback()
+        .database(db)
+        .retentionPolicy(rp)
+        .measurement(destination)
+

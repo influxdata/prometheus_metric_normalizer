@@ -1,0 +1,41 @@
+// destination for the normalized data
+var db = 'prometheus'
+var rp = 'autogen'
+
+var true_value = 1
+var false_value = 0
+var unknown_value = -1
+
+var prefix = 'kube_pod'
+var measurement = prefix + '_'
+var destination = prefix + 's'
+
+var not_measurement = 'kube_pod_container_'
+
+// Normalize metric into measurement
+stream
+    |from()
+        .where(lambda: strHasPrefix("__name__", measurement) AND !strHasPrefix("__name__", not_measurement))
+        .groupBy('namespace', 'pod')
+    @groupConsolidateTrueFalseUnknown()
+        .measurement('kube_pod_status_ready')
+        .tag('condition')
+        .trueValue(true_value)
+        .falseValue(false_value)
+        .unknownValue(unknown_value)
+    @groupConsolidateTrueFalseUnknown()
+        .measurement('kube_pod_status_scheduled')
+        .tag('condition')
+        .trueValue(true_value)
+        .falseValue(false_value)
+        .unknownValue(unknown_value)
+    @groupJoinToSinglePoint()
+        .stripPrefix(measurement)
+        .dropTag('__name__')
+        .ignoreValueFrom('kube_pod_info')
+        .ignoreValueFrom('kube_pod_labels')
+    |kapacitorLoopback()
+        .database(db)
+        .retentionPolicy(rp)
+        .measurement(destination)
+

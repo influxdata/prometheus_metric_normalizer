@@ -1,0 +1,22 @@
+// destination for the normalized data
+var db = 'prometheus'
+var rp = 'autogen'
+
+var prefix = 'kube_pod_container'
+var measurement = prefix + '_'
+var destination = prefix + 's'
+
+// Normalize metric into measurement
+stream
+    |from()
+        .where(lambda: strHasPrefix("__name__", measurement))
+        .groupBy('namespace', 'pod', 'container')
+    @groupJoinToSinglePoint()
+        .stripPrefix(measurement)
+        .dropTag('__name__')
+        .ignoreValueFrom('kube_pod_container_info')
+    |kapacitorLoopback()
+        .database(db)
+        .retentionPolicy(rp)
+        .measurement(destination)
+
